@@ -208,7 +208,7 @@ def main(args=None):
     # X = 0 correspond au bord de la plaque avec point_0_0 et point_0_1
     # Y = 0 correspond au bord de la plaque avec point_0_0 et point_1_0
 
-    node.aim_UR7e(0.99, 0.02)
+    node.aim_UR7e(0.99, 1)
 
     ## Supression des connexions et fermeture du node
     node.destroy_node()
