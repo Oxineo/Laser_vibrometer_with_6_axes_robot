@@ -194,11 +194,26 @@ peaks_v, _ = signal.find_peaks(rep[5:demi_n],prominence=0.1, width=1)  # Ajustez
 peaks_h, _ = signal.find_peaks(rep_h[5:demi_n_h], prominence=0.2, width=1)
 
 # %%
+
+### Pic : Freqences des modes propres
+
 plt.loglog(freqs[5:demi_n][peaks_v], rep[5:demi_n][peaks_v], 'x', label='Pics verticaux', color='red')
 plt.loglog(freqs_h[5:demi_n_h][peaks_h], rep_h[5:demi_n_h][peaks_h], 'x', label='Pics horizontaux', color='black')
 plt.legend()
 
 #%%
+
+freq_mef = [np.float64(49.0501679967059), np.float64(49.0501679967059), np.float64(62.0479004000161), np.float64(102.04770487083248), np.float64(118.16828544240893), np.float64(138.55703062301328), np.float64(180.26071164496904), np.float64(229.81703008587203), np.float64(235.02937381633674), np.float64(277.9705322492294), np.float64(317.04630462138664), np.float64(350.3789852609248), np.float64(367.866038757654), np.float64(395.1279315867118), np.float64(425.7379570147936), np.float64(537.8247545619424), np.float64(556.8510518020956), np.float64(566.701507980634), np.float64(567.9539297225444), np.float64(594.3120568662456), np.float64(631.832438300778), np.float64(685.2328311588914), np.float64(762.632409150582), np.float64(777.8659549219907), np.float64(846.2088755116199), np.float64(872.0956220100869), np.float64(898.72878617357), np.float64(898.72878617357), np.float64(927.6978709232011), np.float64(937.6610681343418), np.float64(1008.6422864891476), np.float64(1043.7874004695168), np.float64(1046.5841601824784), np.float64(1074.4384205405875), np.float64(1201.1020758192792), np.float64(1220.4778066410481), np.float64(1271.4659287380257), np.float64(1303.936985810302), np.float64(1307.5365951901717), np.float64(1362.1386078754274), np.float64(1384.1443552653993), np.float64(1421.0606086133412), np.float64(1427.8251613062312), np.float64(1489.8170447570644), np.float64(1615.7728701233348), np.float64(1636.9524179125062), np.float64(1654.9295628411471), np.float64(1655.1912852072423), np.float64(1676.5742883224718), np.float64(1691.9967772221296), np.float64(1826.715662159472), np.float64(1880.1005620188105)]
+
+for f in freq_mef:
+    plt.axvline(f, color='green', linestyle='--', alpha=0.5, label='Fréquences MEF' if f == freq_mef[0] else "")
+
+
+
+#%%
+
+### Pic : Affichage des différences
+
 dif_freqs = freqs[5:demi_n][peaks_v][:8] - freqs_h[5:demi_n_h][peaks_h][:8]
 plt.figure()
 plt.plot(dif_freqs, 'o-')
@@ -207,7 +222,6 @@ plt.xlabel("Mode")
 plt.ylabel("Différence de fréquence (Hz)")
 plt.grid()
 plt.tight_layout()
-
 
 # %%
 

@@ -118,10 +118,10 @@ def main(record_length=15, nb_aver=1, args=None):
             
         sample_frequency = 28000
         
-        nb_x_point = 20
-        nb_y_point = 20
-        x_point = np.linspace(0.02, 0.99, nb_x_point)
-        y_point = np.linspace(0.02, 0.99, nb_y_point)
+        nb_x_point = 4
+        nb_y_point = 4
+        x_point = np.linspace(0.02, 0.98, nb_x_point)
+        y_point = np.linspace(0.02, 0.98, nb_y_point)
         nb_point = nb_x_point * nb_y_point
         
         # =======================================================
@@ -211,7 +211,7 @@ def main(record_length=15, nb_aver=1, args=None):
             node.aim_UR7e(x_point[i], y_point[j])
             
             # Acquisition
-            sig_mesure, sig_source = acquisition(device.analogIn, sample_frequency, record_length, nb_aver=nb_aver)
+            sig_mesure, sig_source = acquisition(device.analogIn, sample_frequency, record_length)
             
             var_mesure[i, j, :] = sig_mesure
             var_source[i, j, :] = sig_source
