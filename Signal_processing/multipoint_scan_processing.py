@@ -1,3 +1,5 @@
+
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -14,7 +16,7 @@ Dossier de données intéresant:
 -"Mes_Scans_AD3/Scan_20260324_170009/donnees_completes.nc"
 -"Mes_Scans_AD3/Scan_20260402_142109/donnees_completes.nc"
 """
-chemin_fichier_nc = "Mes_Scans_AD3/Scan_20260324_170009/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260324_170009/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 mat = ds["signal_mesure"].values        # Matrice 3D (X, Y, Temps)
@@ -33,8 +35,10 @@ print(f"Chargement terminé : Grille {nb_x}x{nb_y}, {num_time_steps} points temp
 
 vx, vy = np.meshgrid(x_value, y_value, indexing='ij')
 
+#%%
+
 # ==========================================
-# CALCUL DE L'ANALYSE MODALE (OPTIMISÉ RAM)
+# CALCUL DE L'ANALYSE MODALE
 # ==========================================
 
 nb_aver = 3
@@ -87,6 +91,11 @@ print(f"Shape de la matrice de transfert P : {P.shape}")
 rep = np.mean(np.abs(P), axis=(0, 1))
 rep_source_mean_1D = np.mean(rep_source_mean, axis=(0, 1))
 
+#%%
+
+#### Figure interactive
+
+#%matplotlib inline
 
 fig_fft2D = plt.figure(figsize=(10, 6))
 spec = gridspec.GridSpec(ncols=1, nrows=2, figure=fig_fft2D, height_ratios=[5, 1])
@@ -96,6 +105,9 @@ ax_fft2D = fig_fft2D.add_subplot(spec[0, 0])
 idx_freq_initial = 100 
 
 extent_physique = (x_value.min(), x_value.max(), y_value.min(), y_value.max())
+
+
+
 from matplotlib.colors import LinearSegmentedColormap
 
 colors = ['#a50026','#d73027','#f46d43','#fdae61','#fee090','#ffffbf','#e0f3f8','#abd9e9','#74add1','#4575b4','#313695']
@@ -104,7 +116,9 @@ cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=100)
 
 im = ax_fft2D.imshow(P[:, :, idx_freq_initial].T, 
                      extent=extent_physique, 
-                     origin='lower', aspect='auto', cmap="jet", interpolation="bicubic")
+                     origin='lower', aspect='auto', cmap="jet", interpolation="bicubic",
+                     vmin = -np.pi, vmax = np.pi
+                     )
 
 cbar = fig_fft2D.colorbar(im, ax=ax_fft2D)
 cbar.set_label("Fonction de transfert |H|")
@@ -168,7 +182,6 @@ class DraggableLine:
         
         # 2. Mise à jour de la carte de chaleur 2D
         im.set_data(P[:, :, idx].T)
-        im.set_clim(vmin=np.min(P[:, :, idx]), vmax=np.max(P[:, :, idx]))
         ax_fft2D.set_title(f"Amplitude spatiale à Freq = {freq_cible:.1f} Hz")
         
         # 3. Redessine l'écran
@@ -178,3 +191,5 @@ class DraggableLine:
 drag_logic = DraggableLine(vline)
 
 plt.show()
+
+# %%
