@@ -1,5 +1,4 @@
 
-#%%
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -15,8 +14,10 @@ Dossier de données intéresant:
 -"Mes_Scans_AD3/Scan_20260331_153011/donnees_completes.nc" avec une pointe de chauffe froide
 -"Mes_Scans_AD3/Scan_20260324_170009/donnees_completes.nc"
 -"Mes_Scans_AD3/Scan_20260402_142109/donnees_completes.nc"
+Plaque fine :
+-"/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260409_151849/donnees_completes.nc"
 """
-chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260324_170009/donnees_completes.nc"
+chemin_fichier_nc = "Mes_Scans_AD3/Scan_20260413_151410/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 mat = ds["signal_mesure"].values        # Matrice 3D (X, Y, Temps)
@@ -88,10 +89,9 @@ P = np.real(H)
 print(f"Shape de la matrice de transfert P : {P.shape}")
 
 # Moyenne spatiale de la fonction de transfert pour le graphe 1D
-rep = np.mean(np.abs(P), axis=(0, 1))
+rep = np.sqrt(np.mean(np.abs(H)**2, axis=(0, 1)))
 rep_source_mean_1D = np.mean(rep_source_mean, axis=(0, 1))
 
-#%%
 
 #### Figure interactive
 
@@ -117,7 +117,7 @@ cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=100)
 im = ax_fft2D.imshow(P[:, :, idx_freq_initial].T, 
                      extent=extent_physique, 
                      origin='lower', aspect='auto', cmap="jet", interpolation="bicubic",
-                     vmin = -np.pi, vmax = np.pi
+                     vmin=-np.max(P[:, :, idx_freq_initial]), vmax = np.max(P[:, :, idx_freq_initial])
                      )
 
 cbar = fig_fft2D.colorbar(im, ax=ax_fft2D)
@@ -184,6 +184,7 @@ class DraggableLine:
         im.set_data(P[:, :, idx].T)
         ax_fft2D.set_title(f"Amplitude spatiale à Freq = {freq_cible:.1f} Hz")
         
+        im.set_clim(-np.max(P[:, :, idx]), np.max(P[:, :, idx]))  # Ajuste les limites de couleur pour chaque fréquence
         # 3. Redessine l'écran
         self.canvas.draw_idle()
 
@@ -192,4 +193,4 @@ drag_logic = DraggableLine(vline)
 
 plt.show()
 
-# %%
+

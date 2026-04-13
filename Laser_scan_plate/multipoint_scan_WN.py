@@ -16,7 +16,7 @@ from pydwf.utilities import openDwfDevice
 
 from pydwf.utilities.open_dwf_device import openDwfDevice
 
-def analog_out_noise(analogOut, channel=0, amplitude=3.0, bandwidth_hz=2700.0):
+def analog_out_noise(analogOut, channel=0, amplitude=3.0, bandwidth_hz=10000.0):
     """
     Démarre un générateur de bruit blanc matériel continu et 100% aléatoire.
     
@@ -100,7 +100,7 @@ def acquisition(analogIn, sample_frequency, record_length):
 
 import netCDF4 as nc 
 
-def main(record_length=15, nb_aver=1, args=None):
+def main(record_length=21, nb_aver=1, args=None):
     freq_sin = 2000
 
     rclpy.init(args=args)
@@ -114,14 +114,14 @@ def main(record_length=15, nb_aver=1, args=None):
         
         CH1 = 0
 
-        analog_out_noise(device.analogOut, channel=CH1, amplitude=3.0, bandwidth_hz=2700.0)
+        analog_out_noise(device.analogOut, channel=CH1, amplitude=3.0, bandwidth_hz=20000.0)
             
-        sample_frequency = 28000
+        sample_frequency = 56000
         
-        nb_x_point = 4
-        nb_y_point = 4
-        x_point = np.linspace(0.02, 0.98, nb_x_point)
-        y_point = np.linspace(0.02, 0.98, nb_y_point)
+        nb_x_point = 10
+        nb_y_point = 10
+        x_point = np.linspace(0.05, 0.95, nb_x_point)
+        y_point = np.linspace(0.05, 0.95, nb_y_point)
         nb_point = nb_x_point * nb_y_point
         
         # =======================================================

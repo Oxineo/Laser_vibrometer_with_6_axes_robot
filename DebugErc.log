@@ -1,0 +1,7 @@
+System Time     Process     Thread        ERC     ERC String                  Message
+2264275518      669776      1632327360    3075    ercControlTransferFailed    USBC:FGetPDID
+2264275518      669776      1632327360    3075    ercControlTransferFailed    USBC:FGetProdName
+2264394101      670814      958224064     3075    ercControlTransferFailed    USBC:FGetPDID
+2264394101      670814      958224064     3075    ercControlTransferFailed    USBC:FGetProdName
+2264556583      672130      2113910464    3075    ercControlTransferFailed    USBC:FGetPDID
+2264556583      672130      2113910464    3075    ercControlTransferFailed    USBC:FGetProdName
