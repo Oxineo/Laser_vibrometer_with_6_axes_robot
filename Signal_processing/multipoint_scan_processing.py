@@ -17,7 +17,7 @@ Dossier de données intéresant:
 Plaque fine :
 -"/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260409_151849/donnees_completes.nc"
 """
-chemin_fichier_nc = "Mes_Scans_AD3/Scan_20260413_151410/donnees_completes.nc"
+chemin_fichier_nc = "Mes_Scans_AD3/Scan_20260414_101330/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 mat = ds["signal_mesure"].values        # Matrice 3D (X, Y, Temps)

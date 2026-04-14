@@ -116,10 +116,10 @@ def main(record_length=21, nb_aver=1, args=None):
 
         analog_out_noise(device.analogOut, channel=CH1, amplitude=3.0, bandwidth_hz=20000.0)
             
-        sample_frequency = 56000
+        sample_frequency = 50000
         
-        nb_x_point = 10
-        nb_y_point = 10
+        nb_x_point = 20
+        nb_y_point = 20
         x_point = np.linspace(0.05, 0.95, nb_x_point)
         y_point = np.linspace(0.05, 0.95, nb_y_point)
         nb_point = nb_x_point * nb_y_point
