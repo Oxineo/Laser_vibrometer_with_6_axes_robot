@@ -20,8 +20,8 @@ Plaque fine :
 chemin_fichier_nc = "Mes_Scans_AD3/Scan_20260414_101330/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
-mat = ds["signal_mesure"].values        # Matrice 3D (X, Y, Temps)
-signal_emetteur = ds["signal_source"].values # Matrice 3D (X, Y, Temps)
+SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)
+SiE = ds["signal_source"] # Matrice 3D (X, Y, Temps)
 x_value = ds["x"].values 
 y_value = ds["y"].values
 t = ds["temps"].values
@@ -29,13 +29,11 @@ t = ds["temps"].values
 num_time_steps = len(t)
 nb_x = len(x_value)
 nb_y = len(y_value)
-
 sample_frequency = ds.attrs.get("sample_frequency_Hz", num_time_steps)
 
 print(f"Chargement terminé : Grille {nb_x}x{nb_y}, {num_time_steps} points temporels.")
 
 vx, vy = np.meshgrid(x_value, y_value, indexing='ij')
-
 #%%
 
 # ==========================================
@@ -44,44 +42,45 @@ vx, vy = np.meshgrid(x_value, y_value, indexing='ij')
 
 nb_aver = 3
 step_time = num_time_steps // nb_aver
-demi_n = step_time // 2  
+ 
 
 # Création de l'axe des fréquences (uniquement positives)
-freqs = np.fft.fftfreq(step_time, d=1/sample_frequency)
+freqs = np.fft.rfftfreq(step_time, d=1/sample_frequency)
+
+demi_n = len(freqs)  # Nombre de fréquences positives (incluant la DC)
 
 # On applique une fenêtre de Hanning sur chaque tronçon pour éviter le "leakage"
 window = np.hanning(step_time)
 
 # 1. Pré-allocation des matrices d'accumulation (Finis les tableaux 4D géants !)
-Sxx = np.zeros((nb_x, nb_y, step_time), dtype=np.float64)
-Sxy = np.zeros((nb_x, nb_y, step_time), dtype=complex)
-rep_source_accum = np.zeros((nb_x, nb_y, step_time), dtype=np.float64)
+H = np.zeros((nb_x, nb_y, demi_n), dtype=complex)
+rep_source_accum = np.zeros((nb_x, nb_y, demi_n), dtype=np.float64)
 
-for i in range(nb_aver):
+for i in range(nb_x):
+    for j in range(nb_y):
+        sig_s = SiS[i, j, :].values
+        sig_e = SiE[i, j, :].values
+
+        sxx_pt = np.zeros(demi_n, dtype=np.float64)
+        sxy_pt = np.zeros(demi_n, dtype=complex)
+        src_pt = np.zeros(demi_n, dtype=np.float64)
+
     # Extraction du tronçon et application de la fenêtre spatio-temporelle
-    mesure_troncon = mat[:, :, i*step_time:(i+1)*step_time] * window
-    source_troncon = signal_emetteur[:, :, i*step_time:(i+1)*step_time] * window
+        for k in range(nb_aver):
+            tronc_s = sig_s[k*step_time:(k+1)*step_time] * window
+            tronc_e = sig_e[k*step_time:(k+1)*step_time] * window
 
-    # FFT sur l'axe du temps (axis=2) et troncature à demi_n
-    fft_mesure = np.fft.fft(mesure_troncon, n=step_time, axis=2)
-    fft_source = np.fft.fft(source_troncon, n=step_time, axis=2)
+            fft_s = np.fft.rfft(tronc_s)  # On ne garde que les fréquences positives
+            fft_e = np.fft.rfft(tronc_e)
 
-    # 2. Accumulation à la volée (on ajoute au total)
-    Sxx += np.real(np.conjugate(fft_source) * fft_source)
-    Sxy += np.conjugate(fft_source) * fft_mesure
-    rep_source_accum += np.abs(fft_source)
-    
-    # 3. Nettoyage manuel de la RAM pour supprimer ces gros tableaux temporaires
-    del mesure_troncon, source_troncon, fft_mesure, fft_source
+            sxy_pt += np.conjugate(fft_e) * fft_s
+            sxx_pt += np.real(np.conjugate(fft_e) * fft_e) 
+            src_pt += np.abs(fft_e)
+        
+        H[i, j, :] = sxy_pt / sxx_pt  # On ajoute une petite valeur pour éviter la division par zéro
+        rep_source_accum[i, j, :] = src_pt / nb_aver  # Moyenne de la source brute sur les tronçons
 
 # 4. Division finale pour obtenir la moyenne
-Sxx /= nb_aver
-Sxy /= nb_aver
-rep_source_mean = (rep_source_accum / nb_aver) * 2 / step_time
-
-# Fonction de Transfert (Estimateur H1) : H = Sxy / Sxx
-# On ajoute 1e-12 pour éviter une division par zéro mathématique
-H = Sxy / (Sxx)
 
 # L'amplitude de la déformée modale P est la valeur absolue de la fonction de transfert
 P = np.real(H)
@@ -90,7 +89,7 @@ print(f"Shape de la matrice de transfert P : {P.shape}")
 
 # Moyenne spatiale de la fonction de transfert pour le graphe 1D
 rep = np.sqrt(np.mean(np.abs(H)**2, axis=(0, 1)))
-rep_source_mean_1D = np.mean(rep_source_mean, axis=(0, 1))
+rep_source_mean_1D = np.mean(rep_source_accum, axis=(0, 1))
 
 
 #### Figure interactive
