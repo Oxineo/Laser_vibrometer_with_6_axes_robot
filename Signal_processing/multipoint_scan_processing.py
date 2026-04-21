@@ -19,6 +19,7 @@ Plaque 240*300 :
 -avec Peinture : "Mes_Scans_AD3/Scan_20260416_093014/donnees_completes.nc"
 -avec Peinure + Chauffe : "Mes_Scans_AD3/Scan_20260420_162951/donnees_completes.nc"
 -avec Peinure + Chauffe : "Mes_Scans_AD3/Scan_20260420_164158/donnees_completes.nc"
+-avec Peinure + Chauffe Stable : "Mes_Scans_AD3/Scan_20260421_102917/donnees_completes.nc"
 
 Plaque fine :
 -"/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260409_151849/donnees_completes.nc"
@@ -29,7 +30,7 @@ plaque gaufrée :
 
 
 """
-chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260420_164158/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260421_102917/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)
@@ -117,8 +118,6 @@ idx_freq_initial = 100
 
 extent_physique = (x_value.min(), x_value.max(), y_value.min(), y_value.max())
 
-
-
 from matplotlib.colors import LinearSegmentedColormap
 
 colors = ['#a50026','#d73027','#f46d43','#fdae61','#fee090','#ffffbf','#e0f3f8','#abd9e9','#74add1','#4575b4','#313695']
@@ -135,8 +134,8 @@ cbar = fig_fft2D.colorbar(im, ax=ax_fft2D)
 cbar.set_label("Fonction de transfert |H|")
 
 ax_fft2D.set_title(f"Amplitude spatiale à Freq = {freqs[idx_freq_initial]:.1f} Hz")
-ax_fft2D.set_xlabel("Position X (mm)")
-ax_fft2D.set_ylabel("Position Y (mm)")
+ax_fft2D.set_xlabel("Position X (0 to 1)")
+ax_fft2D.set_ylabel("Position Y (0 to 1)")
 
 # --- Graphe du bas : Spectre global ---
 ax_fft2D_mean = fig_fft2D.add_subplot(spec[1, 0])

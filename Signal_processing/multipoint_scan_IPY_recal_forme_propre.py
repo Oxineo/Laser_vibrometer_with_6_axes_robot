@@ -1,4 +1,4 @@
-#%%
+#%% Analyse Modale P1
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -33,7 +33,6 @@ sample_frequency = ds.attrs.get("sample_frequency_Hz", num_time_steps)
 print(f"Chargement terminé : Grille {nb_x}x{nb_y}, {num_time_steps} points temporels.")
 
 vx, vy = np.meshgrid(x_value, y_value, indexing='ij')
-#%%
 
 # ==========================================
 # CALCUL DE L'ANALYSE MODALE
@@ -90,7 +89,7 @@ print(f"Shape de la matrice de transfert P : {P.shape}")
 rep = np.sqrt(np.mean(np.abs(H)**2, axis=(0, 1)))
 rep_source_mean_1D = np.mean(rep_source_accum, axis=(0, 1))
 
-#%%
+#%% Analyse Modale P2
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -125,7 +124,6 @@ sample_frequency = ds.attrs.get("sample_frequency_Hz", num_time_steps)
 print(f"Chargement terminé : Grille {nb_x}x{nb_y}, {num_time_steps} points temporels.")
 
 vx, vy = np.meshgrid(x_value, y_value, indexing='ij')
-#%%
 
 # ==========================================
 # CALCUL DE L'ANALYSE MODALE
@@ -183,72 +181,114 @@ rep_h = np.sqrt(np.mean(np.abs(H)**2, axis=(0, 1)))
 rep_source_mean_1D_h = np.mean(rep_source_accum, axis=(0, 1))
 
 #%%
-#Création de la figure
 import matplotlib
 matplotlib.use('Qt5Agg')
 
-fft_sup = plt.figure(figsize=(12, 6))
-ax = fft_sup.add_subplot(1, 1, 1) 
+# --- 1. Calcul de la phase au centre de la plaque ---
+# On extrait uniquement la phase du point central (point de référence)
+V_phase = np.angle(H) 
 
-#%%
-#Affichage de la plaque vertical
-ax.loglog(freqs[5:demi_n], rep[5:demi_n], label="Réponse modale verticale", color='black')
+H_relative = H * np.exp(-1j * V_phase)
+H_relative_reel = np.real(H_relative)
 
-#%%
-#Affichage de la plaque horizontal
-ax.loglog(freqs_h[20:demi_n_h], rep_h[20:demi_n_h], label="Réponse modale horizontale (Sxx)", color='orange')
+# Pour visualiser la déformée, on prend la partie réelle
+ODS = np.real(H_relative) 
+print(f"Shape de la déformée ODS : {ODS.shape}")
 
-#%%
-#Legende de la figure
+# --- 3. Graphe de la carte de chaleur spatiale ---
 
-ax.set_title("Réponse modale et de la source en fonction de la fréquence")
-ax.set_xlabel("Fréquence (Hz)")
-ax.set_ylabel("Amplitude")
-ax.legend()
-ax.grid()
-plt.tight_layout()
+fig_fft2D = plt.figure(figsize=(10, 6))
+spec = gridspec.GridSpec(ncols=1, nrows=2, figure=fig_fft2D, height_ratios=[5, 1])
 
-# %%
-#Trouvé les pics
-import scipy.signal as signal
+# --- Graphe du haut : Carte de chaleur ---
+ax_fft2D = fig_fft2D.add_subplot(spec[0, 0])
+idx_freq_initial = 4000 
 
-# Détection des pics dans la réponse modale verticale
-peaks_v, _ = signal.find_peaks(rep[5:demi_n],prominence=0.1, width=1)  # Ajustez le seuil de hauteur selon vos données
-peaks_h, _ = signal.find_peaks(rep_h[5:demi_n_h], prominence=0.1, width=1)
+extent_physique = (x_value.min(), x_value.max(), y_value.min(), y_value.max())
 
-# %%
-# Pic affichage : Freqences des modes propres de la plaque verticale
-plt.loglog(freqs[5:demi_n][peaks_v], rep[5:demi_n][peaks_v], 'x', label='Pics plaque verticale', color='red')
+from matplotlib.colors import LinearSegmentedColormap
 
-#%%
-# Pic affichage : Freqences des modes propres de la plaque horizontale
-plt.loglog(freqs_h[5:demi_n_h][peaks_h], rep_h[5:demi_n_h][peaks_h], 'x', label='Pics plaque horizontale', color='black')
-plt.legend()
+colors = ['#a50026','#d73027','#f46d43','#fdae61','#fee090','#ffffbf','#e0f3f8','#abd9e9','#74add1','#4575b4','#313695']
+cmap_name = '9 class spectral'
+cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=100)
 
-#%%
-# Affichage des fréquences MEF
+im = ax_fft2D.imshow(H_relative_reel[:, :, idx_freq_initial].T, 
+                     extent=extent_physique, 
+                     origin='lower', aspect='auto', cmap="jet", interpolation="bicubic",
+                     vmin=-np.max(H_relative_reel[:, :, idx_freq_initial]), vmax = np.max(H_relative_reel[:, :, idx_freq_initial])
+                     )
 
-freq_mef = [np.float64(45.955418770460696), np.float64(57.6294273677844), np.float64(95.63643497988748), np.float64(109.71497113892785), np.float64(128.60051094271873), np.float64(167.76571844921006), np.float64(213.3017142133707), np.float64(218.217841095426)]
-for f in freq_mef:
-    plt.axvline(f, color='green', linestyle='--', alpha=0.5, label='Fréquences MEF' if f == freq_mef[0] else "")
+cbar = fig_fft2D.colorbar(im, ax=ax_fft2D)
+cbar.set_label("Fonction de transfert |H|")
 
+ax_fft2D.set_title(f"Amplitude spatiale à Freq = {freqs[idx_freq_initial]:.1f} Hz")
+ax_fft2D.set_xlabel("Position X (0 to 1)")
+ax_fft2D.set_ylabel("Position Y (0 to 1)")
 
+# --- Graphe du bas : Spectre global ---
+ax_fft2D_mean = fig_fft2D.add_subplot(spec[1, 0])
 
-#%%
+ax_fft2D_mean.loglog(freqs, rep, color='black', label='Plaque (Transfert H1)')
+ax_fft2D_mean.loglog(freqs, rep_source_mean_1D, color='green', linestyle='--', label='Source Brute')
 
-### Pic : Affichage des différences
-if False :
-    dif_freqs = freqs[5:demi_n][peaks_v][:8] - freqs_h[5:demi_n_h][peaks_h][:8]
-    plt.figure()
-    plt.plot(dif_freqs, 'o-')
-    plt.title("Différence de fréquences entre les pics verticaux et horizontaux")
-    plt.xlabel("Mode")
-    plt.ylabel("Différence de fréquence (Hz)")
-    plt.grid()
-    plt.tight_layout()
+ax_fft2D_mean.set_title("Maintenez le clic sur la barre rouge pour la glisser le long du spectre")
+ax_fft2D_mean.set_xlabel("Fréquence (Hz)")
+ax_fft2D_mean.set_ylabel("Amplitude")
+ax_fft2D_mean.grid(True, which="both", ls="--", alpha=0.5)
+ax_fft2D_mean.legend(loc="upper right") 
 
-# %%
+# Création de la ligne rouge avec picker=5 (Tolérance de 5 pixels pour l'attraper)
+vline = ax_fft2D_mean.axvline(x=freqs[idx_freq_initial], color='red', linestyle='-', linewidth=2, picker=5)
 
-plt.show(block=False)
+# --- INTERACTION : Classe de Glisser-Déposer ---
+class DraggableLine:
+    def __init__(self, line):
+        self.line = line
+        self.is_dragging = False
+        self.canvas = line.figure.canvas
+        
+        # Connexion des événements de la souris
+        self.canvas.mpl_connect('button_press_event', self.on_press)
+        self.canvas.mpl_connect('button_release_event', self.on_release)
+        self.canvas.mpl_connect('motion_notify_event', self.on_motion)
+
+    def on_press(self, event):
+        # Vérifie si on a cliqué sur la ligne (ou à moins de 5 pixels)
+        contains, _ = self.line.contains(event)
+        if contains:
+            self.is_dragging = True
+
+    def on_release(self, event):
+        # On lâche la ligne
+        self.is_dragging = False
+
+    def on_motion(self, event):
+        # Si on ne tient pas la ligne, ou qu'on sort du graphe, on annule
+        if not self.is_dragging or event.inaxes != ax_fft2D_mean:
+            return
+            
+        mouse_freq = event.xdata
+        if mouse_freq is None:
+            return
+            
+        # On trouve l'indice de la vraie fréquence la plus proche
+        idx = np.argmin(np.abs(freqs - mouse_freq))
+        freq_cible = freqs[idx]
+        
+        # 1. Mise à jour de la position de la ligne rouge
+        self.line.set_xdata([freq_cible, freq_cible])
+        
+        # 2. Mise à jour de la carte de chaleur 2D
+        im.set_data(P[:, :, idx].T)
+        ax_fft2D.set_title(f"Amplitude spatiale à Freq = {freq_cible:.1f} Hz")
+        
+        im.set_clim(-np.max(P[:, :, idx]), np.max(P[:, :, idx]))  # Ajuste les limites de couleur pour chaque fréquence
+        # 3. Redessine l'écran
+        self.canvas.draw_idle()
+
+# On active notre classe sur la ligne rouge
+drag_logic = DraggableLine(vline)
+
+plt.show()
 
 # %%

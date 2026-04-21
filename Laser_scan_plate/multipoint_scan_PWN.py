@@ -16,7 +16,7 @@ from pydwf.utilities import openDwfDevice
 
 from pydwf.utilities.open_dwf_device import openDwfDevice
 
-def analog_out_noise(analogOut, channel=0, amplitude=3.0, bandwidth_hz=10000.0):
+def analog_out_noise(analogOut, channel=0, amplitude=3.0, bandwidth_hz=5000.0):
     """
     Démarre un générateur de bruit blanc matériel continu et 100% aléatoire.
     
