@@ -114,14 +114,14 @@ def main(record_length=21, nb_aver=1, args=None):
         
         CH1 = 0
 
-        analog_out_noise(device.analogOut, channel=CH1, amplitude=3.0, bandwidth_hz=20000.0)
+        analog_out_noise(device.analogOut, channel=CH1, amplitude=3.0, bandwidth_hz=10000.0)
             
-        sample_frequency = 50000
+        sample_frequency = 35000
         
-        nb_x_point = 20
+        nb_x_point = 16
         nb_y_point = 20
-        x_point = np.linspace(0.05, 0.95, nb_x_point)
-        y_point = np.linspace(0.05, 0.95, nb_y_point)
+        x_point = np.linspace(0.0225, 0.9925, nb_x_point)
+        y_point = np.linspace(0.0125, 0.9925, nb_y_point)
         nb_point = nb_x_point * nb_y_point
         
         # =======================================================
@@ -140,7 +140,11 @@ def main(record_length=21, nb_aver=1, args=None):
             "nb_x_point": nb_x_point,
             "nb_y_point": nb_y_point,
             "x_point_mm": x_point.tolist(),
-            "y_point_mm": y_point.tolist()
+            "y_point_mm": y_point.tolist(),
+            "point00_mm": las.Point_Aimer_Ur7e.point_0_0,
+            "point10_mm": las.Point_Aimer_Ur7e.point_1_0,
+            "point11_mm": las.Point_Aimer_Ur7e.point_1_1,
+            "point01_mm": las.Point_Aimer_Ur7e.point_0_1
         }
         with open(os.path.join(chemin_sauvegarde, "parametres.json"), "w") as f:
             json.dump(parametres, f, indent=4)

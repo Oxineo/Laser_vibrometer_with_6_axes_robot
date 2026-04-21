@@ -14,10 +14,22 @@ Dossier de données intéresant:
 -"Mes_Scans_AD3/Scan_20260331_153011/donnees_completes.nc" avec une pointe de chauffe froide
 -"Mes_Scans_AD3/Scan_20260324_170009/donnees_completes.nc"
 -"Mes_Scans_AD3/Scan_20260402_142109/donnees_completes.nc"
+
+Plaque 240*300 : 
+-avec Peinture : "Mes_Scans_AD3/Scan_20260416_093014/donnees_completes.nc"
+-avec Peinure + Chauffe : "Mes_Scans_AD3/Scan_20260420_162951/donnees_completes.nc"
+-avec Peinure + Chauffe : "Mes_Scans_AD3/Scan_20260420_164158/donnees_completes.nc"
+
 Plaque fine :
 -"/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260409_151849/donnees_completes.nc"
+plaque gaufrée : 
+-"Mes_Scans_AD3/Scan_20260414_145916/" WN Périodique 4*4
+-Mes_Scans_AD3/Scan_20260414_151322/ WN Périodique 10*10
+
+
+
 """
-chemin_fichier_nc = "Mes_Scans_AD3/Scan_20260414_101330/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260420_164158/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)

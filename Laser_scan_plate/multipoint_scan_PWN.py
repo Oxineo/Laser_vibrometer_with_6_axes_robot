@@ -119,8 +119,8 @@ def main(record_length=21, nb_aver=1, args=None):
             
         sample_frequency = 50000
         
-        nb_x_point = 4
-        nb_y_point = 4
+        nb_x_point = 10
+        nb_y_point = 10
         x_point = np.linspace(0.05, 0.95, nb_x_point)
         y_point = np.linspace(0.05, 0.95, nb_y_point)
         nb_point = nb_x_point * nb_y_point
