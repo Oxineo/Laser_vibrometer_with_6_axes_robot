@@ -16,11 +16,13 @@ from pydwf.utilities import openDwfDevice
 
 from pydwf.utilities.open_dwf_device import openDwfDevice
 
-def analog_out_noise(analogOut, channel=0, amplitude=3.0, bandwidth_hz=5000.0):
+def analog_out_noise(analogOut, periode, sample_frequency , channel=0, amplitude=3.0 , bandwidth_hz=5000.0 , seed=420 ):
     """
     Démarre un générateur de bruit blanc matériel continu et 100% aléatoire.
     
     :param analogOut: L'objet device.analogOut
+    :param periode: La durée du signal en secondes
+    :param sample_frequency: La fréquence d'échantillonnage
     :param channel: Le canal de sortie (0 = W1, 1 = W2)
     :param amplitude: L'amplitude crête en Volts
     :param bandwidth_hz: Le taux de rafraîchissement du signal aléatoire
@@ -32,8 +34,19 @@ def analog_out_noise(analogOut, channel=0, amplitude=3.0, bandwidth_hz=5000.0):
     _, buffer_max = analogOut.nodeDataInfo(channel, node_carrier)
     buffer_size = int(buffer_max)
 
-    np.random.seed(42) 
-    waveform = np.random.uniform(-1.0, 1.0, buffer_size)
+    step_time = int(periode * sample_frequency)  # Pas de temps
+    freq = np.fft.rfftfreq(step_time, d=1/sample_frequency)
+
+    A = np.zeros(freq.shape)
+
+    np.random.seed(seed)
+    masque = (freq >= 20) & (freq <= bandwidth_hz)  # Masque pour les fréquences entre 100 Hz et la bande passante souhaitée
+    A[masque] = 1.0  # Appliquer le masque pour créer un signal dans la bande de fréquences souhaitée
+    phase = np.random.uniform(0, 2*np.pi, size=A.shape)  # Phase aléatoire pour chaque composante fréquentielle
+    A_complex = A * np.exp(1j * phase)  # Signal complexe avec amplitude et phase
+    waveform = np.fft.irfft(A_complex, n=step_time)
+
+    waveform = waveform / np.max(np.abs(waveform))
 
     ### --- Configuration de la Porteuse en Bruit Blanc --- ###
     analogOut.nodeEnableSet(channel, node_carrier, True)
@@ -41,7 +54,7 @@ def analog_out_noise(analogOut, channel=0, amplitude=3.0, bandwidth_hz=5000.0):
     analogOut.nodeDataSet(channel, node_carrier, waveform)
     # Pour le bruit, la 'fréquence' définit la vitesse à laquelle l'AD3 génère une nouvelle valeur aléatoire.
     # 100 000 Hz donne un bruit blanc d'excellente qualité couvrant tout votre spectre d'intérêt.
-    analogOut.nodeFrequencySet(channel, node_carrier, bandwidth_hz / buffer_size) 
+    analogOut.nodeFrequencySet(channel, node_carrier, 1/periode) 
     
     analogOut.nodeAmplitudeSet(channel, node_carrier, amplitude)
     analogOut.nodeOffsetSet(channel, node_carrier, 0.0)
@@ -101,8 +114,9 @@ def acquisition(analogIn, sample_frequency, record_length):
 
 import netCDF4 as nc 
 
-def main(record_length=21, nb_aver=1, args=None):
-    freq_sin = 2000
+def main(record_length=10, nb_aver=5, args=None):
+
+    bandwidth_hz = 4000.0
 
     rclpy.init(args=args)
     node = las.Point_Aimer_Ur7e()
@@ -115,14 +129,14 @@ def main(record_length=21, nb_aver=1, args=None):
         
         CH1 = 0
 
-        analog_out_noise(device.analogOut, channel=CH1, amplitude=3.0, bandwidth_hz=20000.0)
-            
-        sample_frequency = 50000
+        sample_frequency = 21300.0
         
-        nb_x_point = 10
-        nb_y_point = 10
-        x_point = np.linspace(0.05, 0.95, nb_x_point)
-        y_point = np.linspace(0.05, 0.95, nb_y_point)
+        analog_out_noise(device.analogOut, record_length /nb_aver, sample_frequency, channel=CH1, amplitude=3.0, bandwidth_hz=bandwidth_hz, seed=420)
+
+        nb_x_point = 24
+        nb_y_point = 30
+        x_point = np.linspace(0.0225, 0.9925, nb_x_point)
+        y_point = np.linspace(0.0125, 0.9925, nb_y_point)
         nb_point = nb_x_point * nb_y_point
         
         # =======================================================
@@ -138,6 +152,7 @@ def main(record_length=21, nb_aver=1, args=None):
         parametres = {
             "sample_frequency": sample_frequency,
             "record_length": record_length,
+            "nb_aver": nb_aver,
             "nb_x_point": nb_x_point,
             "nb_y_point": nb_y_point,
             "x_point_mm": x_point.tolist(),
@@ -181,7 +196,8 @@ def main(record_length=21, nb_aver=1, args=None):
 
         # 4. Attributs globaux (Métadonnées)
         dataset.sample_frequency_Hz = sample_frequency
-        dataset.source_frequency_Hz = freq_sin
+        dataset.source_frequency_Hz = bandwidth_hz
+        dataset.nb_aver = nb_aver
         dataset.robot_model = "UR7e"
         dataset.date_scan = timestamp
 

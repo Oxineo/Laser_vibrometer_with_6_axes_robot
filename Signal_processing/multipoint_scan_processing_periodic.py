@@ -22,6 +22,7 @@ Plaque 240*300 :
 -avec Peinure + Chauffe Stable : "Mes_Scans_AD3/Scan_20260421_102917/donnees_completes.nc"
 -avec Peinure + PWM : "Mes_Scans_AD3/Scan_20260421_155259/donnees_completes.nc"
 -avec Peinure + PWM : "Mes_Scans_AD3/Scan_20260421_161507/donnees_completes.nc"
+-avec Peinture + PWM 22/04/2026 : "Mes_Scans_AD3/Scan_20260422_090454/donnees_completes.nc"
 
 Plaque fine :
 -"/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260409_151849/donnees_completes.nc"
@@ -32,7 +33,7 @@ plaque gaufrée :
 
 
 """
-chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260421_163316/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260422_090454/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)
@@ -55,7 +56,7 @@ vx, vy = np.meshgrid(x_value, y_value, indexing='ij')
 # CALCUL DE L'ANALYSE MODALE
 # ==========================================
 
-nb_aver = 7
+nb_aver = 5
 step_time = num_time_steps // nb_aver
  
 
@@ -82,8 +83,8 @@ for i in range(nb_x):
 
     # Extraction du tronçon et application de la fenêtre spatio-temporelle
         for k in range(nb_aver):
-            tronc_s = sig_s[k*step_time:(k+1)*step_time] * window
-            tronc_e = sig_e[k*step_time:(k+1)*step_time] * window
+            tronc_s = sig_s[k*step_time:(k+1)*step_time] 
+            tronc_e = sig_e[k*step_time:(k+1)*step_time] 
 
             fft_s = np.fft.rfft(tronc_s)  # On ne garde que les fréquences positives
             fft_e = np.fft.rfft(tronc_e)
