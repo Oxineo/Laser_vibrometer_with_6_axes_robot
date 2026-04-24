@@ -116,7 +116,7 @@ import netCDF4 as nc
 
 def main(record_length=10, nb_aver=5, args=None):
 
-    bandwidth_hz = 4000.0
+    bandwidth_hz = 5000.0
 
     rclpy.init(args=args)
     node = las.Point_Aimer_Ur7e()
@@ -131,12 +131,12 @@ def main(record_length=10, nb_aver=5, args=None):
 
         sample_frequency = 21300.0
         
-        analog_out_noise(device.analogOut, record_length /nb_aver, sample_frequency, channel=CH1, amplitude=3.0, bandwidth_hz=bandwidth_hz, seed=420)
+        analog_out_noise(device.analogOut, record_length /nb_aver, sample_frequency, channel=CH1, amplitude=5.0, bandwidth_hz=bandwidth_hz, seed=42)
 
         nb_x_point = 24
         nb_y_point = 30
-        x_point = np.linspace(0.0225, 0.9925, nb_x_point)
-        y_point = np.linspace(0.0125, 0.9925, nb_y_point)
+        x_point = np.linspace(0.01, 0.99, nb_x_point)
+        y_point = np.linspace(0.01, 0.99, nb_y_point)
         nb_point = nb_x_point * nb_y_point
         
         # =======================================================

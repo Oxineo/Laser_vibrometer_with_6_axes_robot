@@ -16,7 +16,7 @@ Dossier de données intéresant:
 -"Mes_Scans_AD3/Scan_20260402_142109/donnees_completes.nc"
 -"Mes_Scans_AD3/Scan_20260409_151849/donnees_completes.nc" : plaque 240*300
 """
-chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260421_102917/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260331_140002/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)
@@ -107,7 +107,7 @@ Dossier de données intéresant:
 -"Mes_Scans_AD3/Scan_20260324_170009/donnees_completes.nc"
 -"Mes_Scans_AD3/Scan_20260402_142109/donnees_completes.nc"
 """
-chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260416_093014/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260324_170009/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)

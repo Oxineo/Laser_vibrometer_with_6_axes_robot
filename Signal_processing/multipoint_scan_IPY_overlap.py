@@ -39,7 +39,7 @@ vx, vy = np.meshgrid(x_value, y_value, indexing='ij')
 # CALCUL DE L'ANALYSE MODALE
 # ==========================================
 
-nb_aver = 3
+nb_aver = 5
 step_time = num_time_steps // nb_aver
  
 
@@ -65,9 +65,9 @@ for i in range(nb_x):
         src_pt = np.zeros(demi_n, dtype=np.float64)
 
     # Extraction du tronçon et application de la fenêtre spatio-temporelle
-        for k in range(nb_aver):
-            tronc_s = sig_s[k*step_time:(k+1)*step_time] * window
-            tronc_e = sig_e[k*step_time:(k+1)*step_time] * window
+        for k in np.linspace(0 , nb_aver-1 , 4*nb_aver-3):
+            tronc_s = sig_s[int(k*step_time):int((k+1)*step_time)] 
+            tronc_e = sig_e[int(k*step_time):int((k+1)*step_time)] 
 
             fft_s = np.fft.rfft(tronc_s)  # On ne garde que les fréquences positives
             fft_e = np.fft.rfft(tronc_e)
@@ -158,8 +158,8 @@ for i in range(nb_x):
 
     # Extraction du tronçon et application de la fenêtre spatio-temporelle
         for k in range(nb_aver):
-            tronc_s = sig_s[k*step_time:(k+1)*step_time] * window
-            tronc_e = sig_e[k*step_time:(k+1)*step_time] * window
+            tronc_s = sig_s[k*step_time:(k+1)*step_time] 
+            tronc_e = sig_e[k*step_time:(k+1)*step_time] 
 
             fft_s = np.fft.rfft(tronc_s)  # On ne garde que les fréquences positives
             fft_e = np.fft.rfft(tronc_e)
@@ -192,9 +192,8 @@ ax = fft_sup.add_subplot(1, 1, 1)
 
 #%%
 #Affichage de la plaque vertical
-rep = rep / np.max(rep)
-ax.loglog(freqs[5:demi_n], rep[5:demi_n], label="Réponse modale horizontale", color='blue')
-
+rep = rep/np.max(rep) + 1 -np.min(rep)
+ax.loglog(freqs[5:demi_n], rep[5:demi_n], label="Réponse modale", color='black')
 #%%
 #Affichage de la plaque horizontal
 rep_h = rep_h / np.max(rep_h)
