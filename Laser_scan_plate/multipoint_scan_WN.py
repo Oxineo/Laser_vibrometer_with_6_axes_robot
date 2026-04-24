@@ -120,8 +120,8 @@ def main(record_length=21, nb_aver=1, args=None):
         
         nb_x_point = 16
         nb_y_point = 20
-        x_point = np.linspace(0.01, 0.1, nb_x_point)
-        y_point = np.linspace(0.99, 0.99, nb_y_point)
+        x_point = np.linspace(0.0225, 0.9925, nb_x_point)
+        y_point = np.linspace(0.0125, 0.9925, nb_y_point)
         nb_point = nb_x_point * nb_y_point
         
         # =======================================================

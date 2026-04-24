@@ -16,7 +16,7 @@ Dossier de données intéresant:
 -"Mes_Scans_AD3/Scan_20260402_142109/donnees_completes.nc"
 -"Mes_Scans_AD3/Scan_20260409_151849/donnees_completes.nc" : plaque 240*300
 """
-chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260331_140002/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260421_102917/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)
@@ -38,7 +38,7 @@ vx, vy = np.meshgrid(x_value, y_value, indexing='ij')
 # CALCUL DE L'ANALYSE MODALE
 # ==========================================
 
-nb_aver = 3
+nb_aver = 5
 step_time = num_time_steps // nb_aver
  
 
@@ -64,7 +64,7 @@ for i in range(nb_x):
         src_pt = np.zeros(demi_n, dtype=np.float64)
 
     # Extraction du tronçon et application de la fenêtre spatio-temporelle
-        for k in range(nb_aver):
+        for k in np.linspace(0 , nb_aver-1 , 4*nb_aver-3):
             tronc_s = sig_s[k*step_time:(k+1)*step_time] * window
             tronc_e = sig_e[k*step_time:(k+1)*step_time] * window
 
@@ -76,7 +76,7 @@ for i in range(nb_x):
             src_pt += np.abs(fft_e)
         
         H[i, j, :] = sxy_pt / sxx_pt  # On ajoute une petite valeur pour éviter la division par zéro
-        rep_source_accum[i, j, :] = src_pt / nb_aver  # Moyenne de la source brute sur les tronçons
+        rep_source_accum[i, j, :] = src_pt / (4*nb_aver-3)  # Moyenne de la source brute sur les tronçons
 
 # 4. Division finale pour obtenir la moyenne
 
@@ -107,7 +107,7 @@ Dossier de données intéresant:
 -"Mes_Scans_AD3/Scan_20260324_170009/donnees_completes.nc"
 -"Mes_Scans_AD3/Scan_20260402_142109/donnees_completes.nc"
 """
-chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260324_170009/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260416_093014/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)

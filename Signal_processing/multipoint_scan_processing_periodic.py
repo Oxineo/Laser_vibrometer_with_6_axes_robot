@@ -1,4 +1,4 @@
-
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -50,8 +50,6 @@ sample_frequency = ds.attrs.get("sample_frequency_Hz", num_time_steps)
 print(f"Chargement terminé : Grille {nb_x}x{nb_y}, {num_time_steps} points temporels.")
 
 vx, vy = np.meshgrid(x_value, y_value, indexing='ij')
-#%%
-
 # ==========================================
 # CALCUL DE L'ANALYSE MODALE
 # ==========================================
@@ -82,9 +80,9 @@ for i in range(nb_x):
         src_pt = np.zeros(demi_n, dtype=np.float64)
 
     # Extraction du tronçon et application de la fenêtre spatio-temporelle
-        for k in range(nb_aver):
-            tronc_s = sig_s[k*step_time:(k+1)*step_time] 
-            tronc_e = sig_e[k*step_time:(k+1)*step_time] 
+        for k in np.linspace(0 , nb_aver-1 , 4*nb_aver-3):
+            tronc_s = sig_s[int(k*step_time):int((k+1)*step_time)] 
+            tronc_e = sig_e[int(k*step_time):int((k+1)*step_time)] 
 
             fft_s = np.fft.rfft(tronc_s)  # On ne garde que les fréquences positives
             fft_e = np.fft.rfft(tronc_e)
@@ -94,7 +92,7 @@ for i in range(nb_x):
             src_pt += np.abs(fft_e)
         
         H[i, j, :] = sxy_pt / sxx_pt  # On ajoute une petite valeur pour éviter la division par zéro
-        rep_source_accum[i, j, :] = src_pt / nb_aver  # Moyenne de la source brute sur les tronçons
+        rep_source_accum[i, j, :] = src_pt / (4*nb_aver-3)  # Moyenne de la source brute sur les tronçons
 
 # 4. Division finale pour obtenir la moyenne
 
@@ -130,7 +128,7 @@ cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=100)
 im = ax_fft2D.imshow(P[:, :, idx_freq_initial].T, 
                      extent=extent_physique, 
                      origin='lower', aspect='auto', cmap="jet", interpolation="bicubic",
-                     vmin=-np.max(P[:, :, idx_freq_initial]), vmax = np.max(P[:, :, idx_freq_initial])
+                     vmin=-np.max(P[:, :, idx_freq_initial])*0.4, vmax = np.max(P[:, :, idx_freq_initial]*0.4)
                      )
 
 cbar = fig_fft2D.colorbar(im, ax=ax_fft2D)
@@ -142,9 +140,10 @@ ax_fft2D.set_ylabel("Position Y (0 to 1)")
 
 # --- Graphe du bas : Spectre global ---
 ax_fft2D_mean = fig_fft2D.add_subplot(spec[1, 0])
-
+rep = rep/np.max(rep) + 1 -np.min(rep)
+rep_source_mean_1D = rep_source_mean_1D/np.max(rep_source_mean_1D) + 1 -np.min(rep_source_mean_1D)
 ax_fft2D_mean.loglog(freqs, rep, color='black', label='Plaque (Transfert H1)')
-ax_fft2D_mean.loglog(freqs, rep_source_mean_1D, color='green', linestyle='--', label='Source Brute')
+#ax_fft2D_mean.loglog(freqs, rep_source_mean_1D, color='green', linestyle='--', label='Source Brute')
 
 ax_fft2D_mean.set_title("Maintenez le clic sur la barre rouge pour la glisser le long du spectre")
 ax_fft2D_mean.set_xlabel("Fréquence (Hz)")
@@ -197,7 +196,7 @@ class DraggableLine:
         im.set_data(P[:, :, idx].T)
         ax_fft2D.set_title(f"Amplitude spatiale à Freq = {freq_cible:.1f} Hz")
         
-        im.set_clim(-np.max(P[:, :, idx]), np.max(P[:, :, idx]))  # Ajuste les limites de couleur pour chaque fréquence
+        im.set_clim(-np.max(P[:, :, idx])*0.2, np.max(P[:, :, idx])*0.2)  # Ajuste les limites de couleur pour chaque fréquence
         # 3. Redessine l'écran
         self.canvas.draw_idle()
 
@@ -207,3 +206,5 @@ drag_logic = DraggableLine(vline)
 plt.show()
 
 
+
+# %%

@@ -1,4 +1,4 @@
-#%% Analyse Modale P1
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -16,7 +16,7 @@ Dossier de données intéresant:
 -"Mes_Scans_AD3/Scan_20260402_142109/donnees_completes.nc"
 -"Mes_Scans_AD3/Scan_20260409_151849/donnees_completes.nc" : plaque 240*300
 """
-chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Laser_vibrometer_with_6_axes_robot/Mes_Scans_AD3/Scan_20260424_095650/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260421_102917/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)
@@ -33,7 +33,7 @@ sample_frequency = ds.attrs.get("sample_frequency_Hz", num_time_steps)
 print(f"Chargement terminé : Grille {nb_x}x{nb_y}, {num_time_steps} points temporels.")
 
 vx, vy = np.meshgrid(x_value, y_value, indexing='ij')
-
+#%%
 
 # ==========================================
 # CALCUL DE L'ANALYSE MODALE
@@ -90,7 +90,7 @@ print(f"Shape de la matrice de transfert P : {P.shape}")
 rep = np.sqrt(np.mean(np.abs(H)**2, axis=(0, 1)))
 rep_source_mean_1D = np.mean(rep_source_accum, axis=(0, 1))
 
-#%% Analyse Modale P2
+#%%
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -108,7 +108,7 @@ Dossier de données intéresant:
 -"Mes_Scans_AD3/Scan_20260324_170009/donnees_completes.nc"
 -"Mes_Scans_AD3/Scan_20260402_142109/donnees_completes.nc"
 """
-chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260402_142109/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260416_093014/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)
@@ -125,7 +125,7 @@ sample_frequency = ds.attrs.get("sample_frequency_Hz", num_time_steps)
 print(f"Chargement terminé : Grille {nb_x}x{nb_y}, {num_time_steps} points temporels.")
 
 vx, vy = np.meshgrid(x_value, y_value, indexing='ij')
-
+#%%
 
 # ==========================================
 # CALCUL DE L'ANALYSE MODALE
@@ -192,13 +192,11 @@ ax = fft_sup.add_subplot(1, 1, 1)
 
 #%%
 #Affichage de la plaque vertical
-rep = rep / np.max(rep)
-ax.loglog(freqs[5:demi_n], rep[5:demi_n], label="Réponse modale horizontale", color='blue')
+ax.loglog(freqs[5:demi_n], rep[5:demi_n], label="Réponse modale verticale", color='black')
 
 #%%
 #Affichage de la plaque horizontal
-rep_h = rep_h / np.max(rep_h)
-ax.loglog(freqs_h[20:demi_n_h], rep_h[20:demi_n_h], label="Réponse modale verticale", color='orange')
+ax.loglog(freqs_h[20:demi_n_h], rep_h[20:demi_n_h], label="Réponse modale horizontale (Sxx)", color='orange')
 
 #%%
 #Legende de la figure

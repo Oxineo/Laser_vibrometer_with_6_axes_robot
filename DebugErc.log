@@ -5,6 +5,7 @@ System Time     Process     Thread        ERC     ERC String                  Me
 2264394101      670814      958224064     3075    ercControlTransferFailed    USBC:FGetProdName
 2264556583      672130      2113910464    3075    ercControlTransferFailed    USBC:FGetPDID
 2264556583      672130      2113910464    3075    ercControlTransferFailed    USBC:FGetProdName
+<<<<<<< HEAD
 3195173550      137008      2472048320    3075    ercControlTransferFailed    USBC:FGetPDID
 3195173551      137008      2472048320    3075    ercControlTransferFailed    USBC:FGetProdName
 3195208109      137096      3380860608    3075    ercControlTransferFailed    USBC:FGetPDID
@@ -35,3 +36,9 @@ System Time     Process     Thread        ERC     ERC String                  Me
 3195917169      138316      2434774720    3075    ercControlTransferFailed    USBC:FGetProdName
 3196688136      140554      708818624     3075    ercControlTransferFailed    USBC:FGetPDID
 3196688137      140554      708818624     3075    ercControlTransferFailed    USBC:FGetProdName
+3210936004      160194      696235712     3075    ercControlTransferFailed    USBC:FGetPDID
+3210936005      160194      696235712     3075    ercControlTransferFailed    USBC:FGetProdName
+3210956408      160272      2600457920    3075    ercControlTransferFailed    USBC:FGetPDID
+3210956408      160272      2600457920    3075    ercControlTransferFailed    USBC:FGetProdName
+=======
+>>>>>>> parent of 37cf200 (Overlap_ajout)

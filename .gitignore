@@ -12,5 +12,6 @@ __pycache__/
 venv/
 env/
 .env
-figure/
+map_chaleur/
 Mes_Scans_AD3/
+figure/
