@@ -33,7 +33,7 @@ plaque gaufrée :
 
 
 """
-chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260422_090454/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260427_143526/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)
@@ -128,7 +128,7 @@ cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=100)
 im = ax_fft2D.imshow(P[:, :, idx_freq_initial].T, 
                      extent=extent_physique, 
                      origin='lower', aspect='auto', cmap="jet", interpolation="bicubic",
-                     vmin=-np.max(P[:, :, idx_freq_initial])*0.4, vmax = np.max(P[:, :, idx_freq_initial]*0.4)
+                     vmin=-np.max(P[:, :, idx_freq_initial]), vmax = np.max(P[:, :, idx_freq_initial])
                      )
 
 cbar = fig_fft2D.colorbar(im, ax=ax_fft2D)
@@ -196,7 +196,8 @@ class DraggableLine:
         im.set_data(P[:, :, idx].T)
         ax_fft2D.set_title(f"Amplitude spatiale à Freq = {freq_cible:.1f} Hz")
         
-        im.set_clim(-np.max(P[:, :, idx])*0.2, np.max(P[:, :, idx])*0.2)  # Ajuste les limites de couleur pour chaque fréquence
+        q = np.quantile(P[:, :, idx] , 0.9)
+        im.set_clim(np.array([-1.0,1.0])*q)  # Ajuste les limites de couleur pour chaque fréquence
         # 3. Redessine l'écran
         self.canvas.draw_idle()
 

@@ -42,3 +42,11 @@ System Time     Process     Thread        ERC     ERC String                  Me
 3210956408      160272      2600457920    3075    ercControlTransferFailed    USBC:FGetProdName
 =======
 >>>>>>> parent of 37cf200 (Overlap_ajout)
+3467309154      15775       1589630656    3075    ercControlTransferFailed    USBC:FGetPDID
+3467309155      15775       1589630656    3075    ercControlTransferFailed    USBC:FGetProdName
+3467395139      16096       2117494464    3075    ercControlTransferFailed    USBC:FGetPDID
+3467395140      16096       2117494464    3075    ercControlTransferFailed    USBC:FGetProdName
+3469193416      18313       1176164032    3075    ercControlTransferFailed    USBC:FGetPDID
+3469193416      18313       1176164032    3075    ercControlTransferFailed    USBC:FGetProdName
+3469577718      18976       1219286720    3075    ercControlTransferFailed    USBC:FGetPDID
+3469577718      18976       1219286720    3075    ercControlTransferFailed    USBC:FGetProdName

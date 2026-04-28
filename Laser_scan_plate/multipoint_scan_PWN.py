@@ -16,7 +16,7 @@ from pydwf.utilities import openDwfDevice
 
 from pydwf.utilities.open_dwf_device import openDwfDevice
 
-def analog_out_noise(analogOut, periode, sample_frequency , channel=0, amplitude=3.0 , bandwidth_hz=5000.0 , seed=420 ):
+def analog_out_noise(analogOut, periode, sample_frequency , channel=0, amplitude=2.2 , bandwidth_hz=5000.0 , seed=420 ):
     """
     Démarre un générateur de bruit blanc matériel continu et 100% aléatoire.
     
@@ -116,7 +116,7 @@ import netCDF4 as nc
 
 def main(record_length=10, nb_aver=5, args=None):
 
-    bandwidth_hz = 4000.0
+    bandwidth_hz = 2500.0
 
     rclpy.init(args=args)
     node = las.Point_Aimer_Ur7e()
@@ -131,10 +131,10 @@ def main(record_length=10, nb_aver=5, args=None):
 
         sample_frequency = 21300.0
         
-        analog_out_noise(device.analogOut, record_length /nb_aver, sample_frequency, channel=CH1, amplitude=3.0, bandwidth_hz=bandwidth_hz, seed=420)
+        analog_out_noise(device.analogOut, record_length /nb_aver, sample_frequency, channel=CH1, amplitude=2.2, bandwidth_hz=bandwidth_hz, seed=420)
 
-        nb_x_point = 4
-        nb_y_point = 4
+        nb_x_point = 22
+        nb_y_point = 22
         x_point = np.linspace(0.01, 0.99, nb_x_point)
         y_point = np.linspace(0.01, 0.99, nb_y_point)
         nb_point = nb_x_point * nb_y_point
@@ -156,7 +156,11 @@ def main(record_length=10, nb_aver=5, args=None):
             "nb_x_point": nb_x_point,
             "nb_y_point": nb_y_point,
             "x_point_mm": x_point.tolist(),
-            "y_point_mm": y_point.tolist()
+            "y_point_mm": y_point.tolist(),
+            "point00_mm": las.Point_Aimer_Ur7e.point_0_0,
+            "point10_mm": las.Point_Aimer_Ur7e.point_1_0,
+            "point11_mm": las.Point_Aimer_Ur7e.point_1_1,
+            "point01_mm": las.Point_Aimer_Ur7e.point_0_1
         }
         with open(os.path.join(chemin_sauvegarde, "parametres.json"), "w") as f:
             json.dump(parametres, f, indent=4)

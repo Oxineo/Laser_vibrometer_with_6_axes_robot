@@ -16,7 +16,7 @@ Dossier de données intéresant:
 -"Mes_Scans_AD3/Scan_20260402_142109/donnees_completes.nc"
 -"Mes_Scans_AD3/Scan_20260409_151849/donnees_completes.nc" : plaque 240*300
 """
-chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Laser_vibrometer_with_6_axes_robot/Mes_Scans_AD3/Scan_20260424_100941/donnees_completes.nc"
+chemin_fichier_nc = "/home/adm-discohbot/Documents/Stage_Recherche_M2_Arthur/Mes_Scans_AD3/Scan_20260424_100941/donnees_completes.nc"
 ds = xr.open_dataset(chemin_fichier_nc, engine="netcdf4")
 
 SiS = ds["signal_mesure"]        # Matrice 3D (X, Y, Temps)
@@ -48,11 +48,9 @@ freqs = np.fft.rfftfreq(step_time, d=1/sample_frequency)
 
 demi_n = len(freqs)  # Nombre de fréquences positives (incluant la DC)
 
-# On applique une fenêtre de Hanning sur chaque tronçon pour éviter le "leakage"
-window = np.hanning(step_time)
-
 # 1. Pré-allocation des matrices d'accumulation (Finis les tableaux 4D géants !)
 H = np.zeros((nb_x, nb_y, demi_n), dtype=complex)
+S = np.zeros((nb_x, nb_y, demi_n), dtype=complex)
 rep_source_accum = np.zeros((nb_x, nb_y, demi_n), dtype=np.float64)
 
 for i in range(nb_x):
@@ -69,20 +67,21 @@ for i in range(nb_x):
             tronc_s = sig_s[int(k*step_time):int((k+1)*step_time)] 
             tronc_e = sig_e[int(k*step_time):int((k+1)*step_time)] 
 
-            fft_s = np.fft.rfft(tronc_s)  # On ne garde que les fréquences positives
+            fft_s = np.fft.rfft(tronc_s) 
             fft_e = np.fft.rfft(tronc_e)
 
             sxy_pt += np.conjugate(fft_e) * fft_s
             sxx_pt += np.real(np.conjugate(fft_e) * fft_e) 
             src_pt += np.abs(fft_e)
-        
-        H[i, j, :] = sxy_pt / sxx_pt  # On ajoute une petite valeur pour éviter la division par zéro
+        S[i,j,:]   = fft_s
+        H[i, j, :] = sxy_pt / sxx_pt  
         rep_source_accum[i, j, :] = src_pt / (4*nb_aver-3)  # Moyenne de la source brute sur les tronçons
 
 # 4. Division finale pour obtenir la moyenne
 
 # L'amplitude de la déformée modale P est la valeur absolue de la fonction de transfert
 P = np.real(H)
+S_r = np.real(S)
 
 print(f"Shape de la matrice de transfert P : {P.shape}")
 
@@ -192,8 +191,10 @@ ax = fft_sup.add_subplot(1, 1, 1)
 
 #%%
 #Affichage de la plaque vertical
+
 rep = rep/np.max(rep) + 1 -np.min(rep)
-ax.loglog(freqs[5:demi_n], rep[5:demi_n], label="Réponse modale", color='black')
+
+ax.semilogx(freqs[:demi_n],rep[:demi_n], label="Réponse modale", color='black')
 #%%
 #Affichage de la plaque horizontal
 rep_h = rep_h / np.max(rep_h)
@@ -251,5 +252,7 @@ if False :
 # %%
 
 plt.show(block=False)
+
+# %%
 
 # %%
