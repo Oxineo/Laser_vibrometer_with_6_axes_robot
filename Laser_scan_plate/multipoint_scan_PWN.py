@@ -40,7 +40,7 @@ def analog_out_noise(analogOut, periode, sample_frequency , channel=0, amplitude
     A = np.zeros(freq.shape)
 
     np.random.seed(seed)
-    masque = (freq >= 20) & (freq <= bandwidth_hz)  # Masque pour les fréquences entre 100 Hz et la bande passante souhaitée
+    masque = (freq >= 100) & (freq <= bandwidth_hz)  # Masque pour les fréquences entre 100 Hz et la bande passante souhaitée
     A[masque] = 1.0  # Appliquer le masque pour créer un signal dans la bande de fréquences souhaitée
     phase = np.random.uniform(0, 2*np.pi, size=A.shape)  # Phase aléatoire pour chaque composante fréquentielle
     A_complex = A * np.exp(1j * phase)  # Signal complexe avec amplitude et phase
@@ -133,10 +133,10 @@ def main(record_length=10, nb_aver=5, args=None):
         
         analog_out_noise(device.analogOut, record_length /nb_aver, sample_frequency, channel=CH1, amplitude=2.2, bandwidth_hz=bandwidth_hz, seed=420)
 
-        nb_x_point = 22
-        nb_y_point = 22
-        x_point = np.linspace(0.01, 0.99, nb_x_point)
-        y_point = np.linspace(0.01, 0.99, nb_y_point)
+        nb_x_point = 4
+        nb_y_point = 4
+        x_point = np.linspace(0.005, 0.995, nb_x_point)
+        y_point = np.linspace(0.005, 0.995, nb_y_point)
         nb_point = nb_x_point * nb_y_point
         
         # =======================================================

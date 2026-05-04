@@ -22,12 +22,10 @@ class Point_Aimer_Ur7e(Node):
 
     # Points de la plaque (4 coins) 
 
-    point_0_0 = [[-0.63871901,  0.05161135,  0.62995667]]
-    point_1_0 = [[-0.6432745  , 0.04698727 , 0.5137421 ]]
-    point_1_1 = [[-0.69786341 , 0.15677779 , 0.51131548]]
-    point_0_1 = [[-0.6942241 ,  0.16058817 , 0.62984187]]
-    
-    
+    point_0_0 = [[-0.66088024 , 0.15049712 , 0.63242925]]
+    point_1_0 = [[-0.6608178 , 0.1506771 , 0.3929892]]
+    point_1_1 = [[-0.75120638 , 0.43335542 , 0.39352509]]
+    point_0_1 = [[-0.75128956 , 0.43324147 , 0.63355949]]
 
     def __init__(self):
         super().__init__('aimer_ur7e_preview')
@@ -134,7 +132,7 @@ class Point_Aimer_Ur7e(Node):
             return False
 
         tcp_x = self.P_Z  
-        tcp_y = self.P_Y
+        tcp_y = - self.P_X
         tcp_z = np.cross(tcp_x, tcp_y) 
         R_cible = np.column_stack((tcp_x, tcp_y, tcp_z))
         
@@ -209,7 +207,7 @@ def main(args=None):
     # X = 0 correspond au bord de la plaque avec point_0_0 et point_0_1
     # Y = 0 correspond au bord de la plaque avec point_0_0 et point_1_0
 
-    node.aim_UR7e(0.5 , 0.5)
+    node.aim_UR7e(0.005, 0.995)
 
     ## Supression des connexions et fermeture du node
     node.destroy_node()
