@@ -1,64 +1,44 @@
 import numpy as np
-import time
-import os
-import json
+import sys
+from collections import deque
 from datetime import datetime
 
-import pyqtgraph as pg # Assurez-vous de bien avoir importé pyqtgraph
-
-from pydwf import (DwfLibrary, DwfEnumConfigInfo, DwfTriggerSource, 
-                   DwfAnalogOutNode, DwfAnalogOutFunction, DwfAcquisitionMode,
-                   DwfState)
-
-import time
-
-import sys
 import pyqtgraph as pg
 from PyQt5.QtCore import QTimer
 
-# Importation de la bibliothèque Digilent
-
+from pydwf import (DwfLibrary, DwfEnumConfigInfo, DwfAnalogOutNode, 
+                   DwfAnalogOutFunction, DwfAcquisitionMode)
 from pydwf.utilities.open_dwf_device import openDwfDevice
 
-
-def analog_out_noise(analogOut, periode, sample_frequency , channel=0, amplitude=2.2 , bandwidth_hz=5000.0 , seed=420 ):
+def analog_out_noise(analogOut, periode, sample_frequency, channel=0, amplitude=2.2, bandwidth_hz=5000.0, seed=420):
     """
     Démarre un générateur de bruit blanc matériel continu et 100% aléatoire.
-    
-    :param analogOut: L'objet device.analogOut
-    :param periode: La durée du signal en secondes
-    :param sample_frequency: La fréquence d'échantillonnage
-    :param channel: Le canal de sortie (0 = W1, 1 = W2)
-    :param amplitude: L'amplitude crête en Volts
-    :param bandwidth_hz: Le taux de rafraîchissement du signal aléatoire
     """
     node_carrier = DwfAnalogOutNode.Carrier
 
     analogOut.reset(channel)
 
     _, buffer_max = analogOut.nodeDataInfo(channel, node_carrier)
-    buffer_size = int(buffer_max)
-
-    step_time = int(periode * sample_frequency)  # Pas de temps
+    
+    step_time = int(periode * sample_frequency)
     freq = np.fft.rfftfreq(step_time, d=1/sample_frequency)
 
     A = np.zeros(freq.shape)
 
     np.random.seed(seed)
-    masque = (freq >= 100) & (freq <= bandwidth_hz)  # Masque pour les fréquences entre 100 Hz et la bande passante souhaitée
-    A[masque] = 1.0  # Appliquer le masque pour créer un signal dans la bande de fréquences souhaitée
-    phase = np.random.uniform(0, 2*np.pi, size=A.shape)  # Phase aléatoire pour chaque composante fréquentielle
-    A_complex = A * np.exp(1j * phase)  # Signal complexe avec amplitude et phase
+    masque = (freq >= 100) & (freq <= bandwidth_hz)
+    A[masque] = 1.0  
+    phase = np.random.uniform(0, 2*np.pi, size=A.shape)
+    A_complex = A * np.exp(1j * phase)
     waveform = np.fft.irfft(A_complex, n=step_time)
 
+    # Normalisation
     waveform = waveform / np.max(np.abs(waveform))
 
     ### --- Configuration de la Porteuse en Bruit Blanc --- ###
     analogOut.nodeEnableSet(channel, node_carrier, True)
     analogOut.nodeFunctionSet(channel, node_carrier, DwfAnalogOutFunction.Custom)
     analogOut.nodeDataSet(channel, node_carrier, waveform)
-    # Pour le bruit, la 'fréquence' définit la vitesse à laquelle l'AD3 génère une nouvelle valeur aléatoire.
-    # 100 000 Hz donne un bruit blanc d'excellente qualité couvrant tout votre spectre d'intérêt.
     analogOut.nodeFrequencySet(channel, node_carrier, 1/periode) 
     
     analogOut.nodeAmplitudeSet(channel, node_carrier, amplitude)
@@ -66,61 +46,43 @@ def analog_out_noise(analogOut, periode, sample_frequency , channel=0, amplitude
 
     analogOut.configure(channel, True)
 
-def main() :
+def main():
     # ----------------------------------------------------------------------
     # 1. PRÉPARATION DE L'INTERFACE GRAPHIQUE (PyQtGraph)
     # ----------------------------------------------------------------------
-
-    app = pg.Qt.mkQApp("Oscilloscope AD3 - Essais d'Impact")
+    app = pg.mkQApp("Oscilloscope AD3 - Essais d'Impact")
 
     win = pg.GraphicsLayoutWidget(show=True, title="Acquisition AD3")
     win.resize(1000, 600)
 
-    plot = win.addPlot(title="Voie 1 : Mesure de déformation (en direct)")
+    plot = win.addPlot(title="Voie 2 : Spectre (en direct)")
     plot.setLabel('bottom', "Fréquence", units='Hz')
-    plot.setLabel('left', "Tension", units='V')
-    plot.setYRange(-5, 5) # Force l'affichage entre -5V et +5V
+    plot.setLabel('left', "Amplitude")
+    # plot.setYRange(0, 5) # À ajuster selon l'amplitude de votre FFT
     plot.showGrid(x=True, y=True, alpha=0.3)
 
-    # Création de la courbe (vide pour l'instant)
-    plot.setLogMode(x=True, y=True)
-
-    # ... (Création du plot) ...
-
-    # Création du curseur vertical (InfiniteLine)
-    # angle=90 : ligne verticale. movable=True : on peut la glisser à la souris
+    # Création du curseur vertical
     curseur = pg.InfiniteLine(angle=90, movable=True, pen=pg.mkPen('r', width=2))
-    
-    # Position initiale du curseur (par exemple à 0.04 secondes)
-    curseur.setPos(0.04)
-    
-    # Ajout du curseur au graphique
+    curseur.setPos(1000) # Position initiale à 1000 Hz
     plot.addItem(curseur)
 
-    # Ajoute un label en haut du graphique pour afficher la valeur
     label_valeur = pg.TextItem(text="", color="r", anchor=(0, 1))
     plot.addItem(label_valeur)
 
     # Réglage de la fréquence et du nombre de points
-    freq_echantillonnage = 100000.0 # 100 kHz
-    taille_buffer = 8192*4
-    
+    freq_echantillonnage = 8192.0 # 100 kHz
+    taille_buffer = 8192 * 2
+
+    # L'axe X des fréquences (calculé une seule fois)
     freqs = np.fft.rfftfreq(taille_buffer, d=1/freq_echantillonnage)
 
-    # Fonction appelée à chaque fois que le curseur est déplacé
     def curseur_deplace(ligne):
-        freq_visee = ligne.value() # Récupère la position X du curseur
+        freq_visee = ligne.value()
+        label_valeur.setText(f"Curseur X : {freq_visee:.1f} Hz")
+        # On place le texte légèrement au-dessus du curseur
+        label_valeur.setPos(freq_visee, plot.viewRange()[1][1] * 0.9) 
 
-        # On récupère les vraies valeurs à cet indice
-
-        label_valeur.setText(f"Curseur X : {freq_visee:.4f} s")
-        # On peut aussi repositionner le texte à côté du curseur
-        label_valeur.setPos(freq_visee, 4.5) 
-
-    # Connecte le mouvement du curseur à la fonction
     curseur.sigPositionChanged.connect(curseur_deplace)
-    
-    # Initialisation
     curseur_deplace(curseur)
 
     courbe = plot.plot(pen='y') 
@@ -130,75 +92,89 @@ def main() :
     # ----------------------------------------------------------------------
     dwf = DwfLibrary()
 
-    def maximize_analog_out_buffer_size(configuration_parameters):
-                """Select the configuration with the highest possible analog out buffer size."""
-                return configuration_parameters[DwfEnumConfigInfo.AnalogOutBufferSize]
+    print("Connexion à l'Analog Discovery en cours...")
+    
+    # Le bloc 'with' garantit la fermeture propre de l'AD3 en cas de crash
     with openDwfDevice(dwf) as device:
-        try:
-        # Ouvre le premier appareil détecté (-1)
-            record_length = 2 
-            nb_aver = 5
-            bandwidth_hz = 2500
-            CH1 = 0
+        print("Connecté avec succès.")
+        
+        record_length = taille_buffer / freq_echantillonnage
+        bandwidth_hz = 2500
+        CH1 = 0
+        CH2 = 1
 
-            data_save = []
+        # File d'attente optimisée pour garder les 5 dernières FFT (Moyenne glissante)
+        nb_aver = 10
+        historique_fft_CH1 = deque(maxlen=nb_aver)
+        historique_fft_CH2 = deque(maxlen=nb_aver)
 
-            sample_frequency = 21300.0
-            analog_out_noise(device.analogOut, record_length, sample_frequency, channel=CH1, amplitude=2.2, bandwidth_hz=bandwidth_hz, seed=420)
+        sample_frequency = freq_echantillonnage
+        # Démarrage de la sortie analogique
+        analog_out_noise(device.analogOut, record_length, sample_frequency, channel=CH1, amplitude=2.2, bandwidth_hz=bandwidth_hz, seed=420)
 
-            analogIn = device.analogIn
+        analogIn = device.analogIn
 
-            # Reset et configuration de la voie 1
-            analogIn.reset()
-            analogIn.channelEnableSet(0, True) # 0 correspond à CH1
-            analogIn.channelRangeSet(0, 5.0)   # Calibre +/- 5V
-            
-            # Mode "ScanScreen" : le buffer se remplit en continu comme un oscilloscope
-            # (Vérifiez les noms exacts des Enums selon votre version de pydwf)
-            analogIn.acquisitionModeSet(DwfAcquisitionMode.ScanScreen)
-            
-
-
-            analogIn.frequencySet(freq_echantillonnage)
-            analogIn.bufferSizeSet(taille_buffer)
-            
-            # Démarre l'acquisition sur l'AD3
-            analogIn.configure(False, True)
+        # Reset et configuration de l'entrée analogique
+        analogIn.reset()
+        analogIn.channelEnableSet(CH1, True)
+        analogIn.channelRangeSet(CH1, 5.0) 
+        analogIn.channelEnableSet(CH2, True)
+        analogIn.channelRangeSet(CH2, 5.0)
+        
+        # Mode continu
+        analogIn.acquisitionModeSet(DwfAcquisitionMode.ScanScreen)
+        analogIn.frequencySet(freq_echantillonnage)
+        analogIn.bufferSizeSet(taille_buffer)
+        
+        # Démarre l'acquisition
+        analogIn.configure(False, True)
 
         # ----------------------------------------------------------------------
         # 3. LA BOUCLE DE MISE À JOUR (Le "Cerveau" du temps réel)
         # ----------------------------------------------------------------------
-            def update_graph():
-                """Fonction appelée automatiquement par le Timer"""
-                # Demande à l'AD3 de mettre à jour son statut interne
-                analogIn.status(True)
+        def update_graph():
+            # Met à jour le statut interne de l'AD3
+            analogIn.status(True)
+            
+            # On lit tout le buffer d'un coup (taille_buffer points)
+            data_ch1 = analogIn.statusData(CH1, taille_buffer)
+            data_ch2 = analogIn.statusData(CH2, taille_buffer)
+            
+            # 1. Calcul de la FFT COMPLEXE (SANS np.abs ! On garde la phase)
+            fft_CH1 = np.fft.rfft(data_ch1)
+            fft_CH2 = np.fft.rfft(data_ch2)
+
+            # Ajout à l'historique
+            historique_fft_CH1.append(fft_CH1)  
+            historique_fft_CH2.append(fft_CH2)
+
+            # On vérifie qu'on a au moins une donnée pour éviter les erreurs au démarrage
+            if len(historique_fft_CH1) > 0:
                 
-                # Récupère les 8192 derniers points du buffer de la Voie 1 (CH1)
-                data = analogIn.statusData(0, taille_buffer)
-                fft = np.abs(np.fft.rfft(data))
+                # 2. Calcul des densités spectrales moyennes
+                # Supposons que CH2 est l'entrée (le marteau/bruit) et CH1 la sortie (le capteur)
+                Sxy = np.mean(np.conjugate(historique_fft_CH2) * historique_fft_CH1, axis=0)
+                Sxx = np.mean(np.conjugate(historique_fft_CH2) * historique_fft_CH2, axis=0) 
 
-                # Met à jour la courbe à l'écran instantanément
-                courbe.setData(x = freqs , y = fft)
+                # 3. Calcul de la fonction de transfert H
+                H = Sxy / (Sxx+1e-12) 
+                           
+                
+                # 4. On calcule l'amplitude (le module) pour pouvoir l'afficher sur l'écran
+                amplitude_H = np.abs(H)
 
-            # Création du Timer
-            timer = QTimer()
-            timer.timeout.connect(update_graph)
-            timer.start(33) # 33 millisecondes = ~30 Images par seconde
+                # Mise à jour de la courbe
+                courbe.setData(x=freqs, y=amplitude_H)
 
-            # Lance l'application (le script reste bloqué ici tant que la fenêtre est ouverte)
-            sys.exit(app.exec())
+        timer = QTimer()
+        timer.timeout.connect(update_graph)
+        timer.start(33) # ~30 fps
 
-            # ----------------------------------------------------------------------
-            # 4. FERMETURE PROPRE (Très important pour l'AD3)
-            # ----------------------------------------------------------------------
-        except Exception as e:
-            print(f"Erreur lors de l'acquisition : {e}")
+        # Lance l'application. Le script bloque ici tant que la fenêtre est ouverte.
+        app.exec()
 
-        finally:
-            # Ce bloc s'exécute quand vous fermez la fenêtre PyQtGraph
-            if device is not None:
-                device.close()
-                print("Connexion à l'AD3 fermée proprement.")
+    # Quand la fenêtre est fermée, on sort du bloc 'with'
+    print("Application terminée. Connexion à l'AD3 fermée proprement.")
 
 if __name__ == "__main__":
     main()

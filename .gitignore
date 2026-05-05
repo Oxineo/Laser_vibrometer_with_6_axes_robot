@@ -8,6 +8,10 @@ __pycache__/
 *.vtu
 *.vtk
 *.mp4
+*.npy
+*.bin
+*.npz
+*.log
 
 # Environnements virtuels (si tu en as un dans le dossier)
 venv/
