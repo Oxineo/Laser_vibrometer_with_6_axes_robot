@@ -1,7 +1,7 @@
 import numpy as np
 import sys
+import time
 from collections import deque
-from datetime import datetime # ### ENREGISTREMENT 1/3 : Pour le nom du fichier ###
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
@@ -99,11 +99,12 @@ def main():
         nb_aver = 10
         historique_fft_CH1 = deque(maxlen=nb_aver)
         historique_fft_CH2 = deque(maxlen=nb_aver)
-        
-        ### ENREGISTREMENT 2/3 : Liste pour stocker les données en mémoire ###
-        historique_sauvegarde = []
-        ######################################################################
 
+        # Variables pour l'enregistrement complet
+        historique_toutes_FRF = []
+        temps_enregistrement = []
+        start_time = time.time()
+        
         sample_frequency = freq_echantillonnage
         analog_out_noise(device.analogOut, record_length, sample_frequency, channel=CH1, amplitude=2.2, bandwidth_hz=bandwidth_hz, seed=420)
 
@@ -123,7 +124,7 @@ def main():
         # 3. LA BOUCLE DE MISE À JOUR (Calcul rapide + Affichage ralenti)
         # ----------------------------------------------------------------------
         
-        TRAMES_AVANT_AFFICHAGE = 30 
+        TRAMES_AVANT_AFFICHAGE = 1 
         compteur_trames = 0
         
         def update_graph():
@@ -140,7 +141,7 @@ def main():
             historique_fft_CH1.append(fft_CH1)  
             historique_fft_CH2.append(fft_CH2)
 
-            # 2. Calcul mathématique à pleine vitesse (pour la précision)
+            # 2. Calcul mathématique (Moyenne sur 10 secondes glissantes)
             if len(historique_fft_CH1) > 0:
                 Sxy = np.mean(np.conjugate(historique_fft_CH2) * historique_fft_CH1, axis=0)
                 Sxx = np.mean(np.conjugate(historique_fft_CH2) * historique_fft_CH2, axis=0) 
@@ -149,15 +150,14 @@ def main():
                 H = Sxy / (Sxx + 1e-12) 
                 amplitude_H_dB = 20 * np.log10(np.abs(H) + 1e-12)
 
-                # 3. Mise à jour de l'écran et sauvegarde au ralenti
+                # Enregistrement des données
+                historique_toutes_FRF.append(H)
+                temps_enregistrement.append(time.time() - start_time)
+
+                # 3. Mise à jour de l'écran
                 compteur_trames += 1
                 
                 if compteur_trames >= TRAMES_AVANT_AFFICHAGE:
-                    
-                    ### ENREGISTREMENT 3A/3 : Ajout discret à la mémoire ###
-                    # On sauvegarde en float32 pour diviser le poids par 2
-                    historique_sauvegarde.append(amplitude_H_dB.astype(np.float32).copy())
-                    ########################################################
                     
                     # Défilement du tampon visuel : on décale et on met la nouvelle ligne
                     img_buffer[:, :-1] = img_buffer[:, 1:]
@@ -169,31 +169,22 @@ def main():
                     # On remet le compteur à zéro
                     compteur_trames = 0
 
-        # Le timer tourne très vite (~30 fois par seconde)
+        # Le timer tourne à 1 Hz (1 fois par seconde)
         timer = QTimer()
         timer.timeout.connect(update_graph)
-        timer.start(33) 
+        timer.start(1000) 
 
-        # Blocage ici pendant que la fenêtre est ouverte
-        app.exec()
-
-        ### ENREGISTREMENT 3B/3 : Génération du fichier à la fermeture ###
-        print("\nCréation du fichier NPZ en cours...")
-        if len(historique_sauvegarde) > 0:
-            matrice_finale = np.array(historique_sauvegarde)
-            nom_fichier = f"Derive_Freq_{datetime.now().strftime('%Y%m%d_%H%M%S')}.npz"
-            
-            # Sauvegarde compressée (spectro, fréquences, et intervalle de temps)
-            np.savez_compressed(nom_fichier, 
-                                spectro=matrice_finale, 
-                                freqs=freqs,
-                                trames_moyennees=TRAMES_AVANT_AFFICHAGE)
-            
-            print(f"✅ Fichier sauvegardé : {nom_fichier}")
-            print(f"📊 {matrice_finale.shape[0]} mesures enregistrées (soit {matrice_finale.shape[0]} x {TRAMES_AVANT_AFFICHAGE} trames réelles).")
-        else:
-            print("Aucune donnée collectée.")
-        ##################################################################
+        try:
+            # Blocage ici pendant que la fenêtre est ouverte
+            app.exec()
+        finally:
+            print("Sauvegarde de l'enregistrement des FRFs...")
+            nom_fichier = f"FRF_record_time_{int(time.time())}.npz"
+            np.savez(nom_fichier,
+                     frfs=np.array(historique_toutes_FRF),
+                     temps=np.array(temps_enregistrement),
+                     freqs=freqs)
+            print(f"Données sauvegardées dans {nom_fichier}")
 
     print("Interface fermée, connexion à l'AD3 clôturée proprement.")
 
